@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>test backend</title>
+</head>
+<body>
+  hi is my backend
+  <br>
+  this chat can talk 3 people
+  <br>
+  <div  id="namebox" style="display:flex;align-items: center;"><p>enter your name </p> :  <input type="text" id="user"></input> <button id="namebtn">enter name</button> </div>
+  <p id="nameDisplay" style="display: none;"></p>
+  <div style="display:flex;align-items: center;"><p>   you id is </p> :  <h3 id="id"></h3></div>
+  <div id="idroom" style="display:flex;align-items: center;display: none;"><p> and you stay room </p>:<h4 id="room"></h4></div>
+  <div id="createbox" style="display:flex;align-items: center;"><p> create room </p> : <input type="text" id="create"></input> <button id="createbtn">create</button></div>
+  <div id="joinbox" style="display:flex;align-items: center;"><p> join room </p> : <input type="text" id="join"> <button id="joinbtn">join</button></input></div>
+<br>
+<div style="border:1px solid black;padding:8px">
+  <div style="position:fixed;bottom:0px;right: 0px; border-radius:7px;background-color: antiquewhite; border:1px solid rgb(139, 139, 139);padding:12px">
+    <p>you can type below this textbox to chat with you friend </p>
+    <p style="color:red" id="warn">dont forget to join or create room before use this chat</p>
+    <div style="display:flex;justify-content: end;">
+      <input type="text" id="msg">
+      <button id="btn">send</button>
+
+    </div>
+  </div>
+ 
+  <div style="border:1px solid black;padding:8px">
+    <h1>chat area</h1>
+    <p id="error" style="color:red"> </p>
+    <div style="height: 1px;border-bottom: 1px solid black;width: 100%;"></div>
+    <div id="messages"></div>
+  </div>
+</div>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  var socket = io();
+  const btn = document.getElementById('btn')
+  var namebox = document.getElementById('namebox')
+  var namebtn = document.getElementById('namebtn')
+  var nameDisplay = document.getElementById('nameDisplay')
+  
+  var user = document.getElementById('user')
+  var messages = document.getElementById('messages');
+  var create = document.getElementById('create');
+  var join = document.getElementById('join');
+var createbtn = document.getElementById('createbtn')
+var joinbtn = document.getElementById('joinbtn')
+  var id = document.getElementById('id')
+  var room = document.getElementById('room')
+var msg = document.getElementById('msg')
+var idroom = document.getElementById('idroom')
+var createbox = document.getElementById('createbox')
+var joinbox = document.getElementById('joinbox')
+var warn = document.getElementById('warn')
+var error = document.getElementById('error')
+  socket.on('connected',(idSocket)=>{
+  id.innerText = idSocket
+  })
+  createbtn.addEventListener('click',()=>{
+    socket.emit('create room',create.value );
+  })
+  joinbtn.addEventListener('click',()=>{
+    socket.emit('join room', join.value);
+  })
+  btn.addEventListener('click',()=>{
+    socket.emit('chat', msg.value);
+  })
+
+namebtn.addEventListener('click',()=>{
+  socket.emit('setname', user.value);
+})
+
+  socket.on('setname',(name)=>{
+    console.log(name);
+    nameDisplay.style.display = 'block'
+    nameDisplay.innerText = 'your name : '+name
+    namebox.style.display = 'none'
+  })
+
+  socket.on('date', function(data) {
+    error.style.display = 'none'
+    var item = document.createElement('div');
+    const text = document.createElement('p')
+    text.innerText = data.msg
+    item.appendChild(text)
+    messages.appendChild(item);
+  })
+
+  socket.on('chat', function(data) {
+    msg.value=''
+    if(data.status===200){
+      error.style.display = 'none'
+    var item = document.createElement('div');
+    const text = document.createElement('h4');
+    text.innerHTML = '<span style="color:brown">'+data.msg.user+'</span>' +' said : ' + data.msg.text
+    item.appendChild(text)
+    const line = document.createElement('div')
+    line.innerHTML = '<div style="height: 1px;border-bottom: 1px solid black;width: 100%;"></div>'
+    messages.appendChild(item);
+    messages.appendChild(line);
+    }
+    else{
+      var item = document.createElement('p');
+    item.innerHTML = data.msg;
+    item.style.color = 'red'
+    error.appendChild(item);
+    }
+   
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+  socket.on('create room', function(data) {
+   if(data.status === 200){
+    console.log(data);
+    room.innerText = data.id
+    warn.style.display = 'none'
+    room.style.color = 'black'
+    idroom.style.display = 'flex'
+createbox.style.display = 'none'
+joinbox.style.display = 'none'
+   }
+   else{
+    room.innerText = 'room existing  or something error'
+    room.style.color = 'red'
+    idroom.style.display = 'flex'
+   }
+  });
+
+  socket.on('join room', function(data) {
+    if(data.status === 200){
+      console.log(data);
+    warn.style.display = 'none'
+    room.innerText = data.id
+    room.style.color = 'black'
+
+    idroom.style.display = 'flex'
+createbox.style.display = 'none'
+joinbox.style.display = 'none'
+   }
+   else{
+    room.innerText = 'room maximun / room don\'t create or something error'
+    room.style.color = 'red'
+    idroom.style.display = 'flex'
+   }
+  });
+</script>
+</body>
+</html>
